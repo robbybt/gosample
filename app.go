@@ -2,19 +2,40 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/tokopedia/gosample/src/deposit"
 
 	"github.com/google/gops/agent"
 
 	"github.com/tokopedia/gosample/src/config"
 	"github.com/tokopedia/gosample/src/hello"
-	"gopkg.in/tokopedia/grace.v1"
+	grace "gopkg.in/tokopedia/grace.v1"
 	"gopkg.in/tokopedia/logging.v1"
 )
 
-func main() {
+func printWord(input string) (int, int, bool, string) {
+	fmt.Println(input)
+	return 1, 0, false, "sqwe"
+}
+func init() {
+	fmt.Println("jalan pertama")
+	//var1 := 1
 
+	type datastruct struct {
+		angka   int
+		kalimat string
+	}
+
+	var temp datastruct
+	temp.angka = 1
+	temp.kalimat = "asd"
+
+}
+func main() {
+	fmt.Println("jalan kedua")
 	flag.Parse()
 	logging.LogInit()
 
@@ -32,11 +53,14 @@ func main() {
 	}
 
 	hwm := hello.NewHelloWorldModule(configs)
-
+	dm := deposit.NewDepositModule(configs)
 	http.HandleFunc("/hello", hwm.SayHelloWorld)
+	http.HandleFunc("/tambah", hwm.SumNumber)
+	http.HandleFunc("/add", dm.AddDeposit)
 	go logging.StatsLog()
 
 	log.Fatal(grace.Serve(":9000", nil))
+	fmt.Println(printWord("test123"))
 }
 
 func InitConfig() *config.Config {

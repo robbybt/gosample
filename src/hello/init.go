@@ -2,7 +2,9 @@ package hello
 
 import (
 	"expvar"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/tokopedia/gosample/src/config"
 
@@ -30,4 +32,24 @@ func NewHelloWorldModule(cfgs *config.Config) *HelloWorldModule {
 func (hlm *HelloWorldModule) SayHelloWorld(w http.ResponseWriter, r *http.Request) {
 	hlm.stats.Add(1)
 	w.Write([]byte("Hello " + hlm.something))
+}
+
+func (hlm *HelloWorldModule) SumNumber(w http.ResponseWriter, r *http.Request) {
+	//buat baca parameter
+	r.ParseForm()
+	val1, _ := strconv.ParseInt(r.FormValue("angka1"), 10, 64)
+	val2, _ := strconv.ParseInt(r.FormValue("angka2"), 10, 64)
+	op := r.FormValue("operasi")
+	var sum int64
+	if op == "kali" {
+		sum = val1 * val2
+	} else if op == "tambah" {
+		sum = val1 + val2
+	} else if op == "bagi" {
+		sum = val1 / val2
+	}
+
+	strSum := strconv.FormatInt(sum, 10)
+	fmt.Println(strSum)
+	w.Write([]byte("hasil: " + strSum))
 }
