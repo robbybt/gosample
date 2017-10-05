@@ -4,51 +4,43 @@ import (
 	"log"
 	"os"
 
+	"github.com/tokopedia/gosample/src/config"
+
 	"github.com/nsqio/go-nsq"
+	"github.com/tokopedia/gosample/src/redis"
 	logging "gopkg.in/tokopedia/logging.v1"
 )
 
-type ServerConfig struct {
-	Name string
-}
-
-type Config struct {
-	Server ServerConfig
-}
-
 type NSQModule struct {
-	cfg *Config
+	cfg *config.Config
 	q   *nsq.Consumer
 }
 
 func NewNSQModule() *NSQModule {
 
-	var cfg Config
+	var cfg *config.Config
 
-	ok := logging.ReadModuleConfig(&cfg, "config", "hello") || logging.ReadModuleConfig(&cfg, "files/etc/gosample", "hello")
-	if !ok {
-		// when the app is run with -e switch, this message will automatically be redirected to the log file specified
-		log.Fatalln("failed to read config")
-	}
+	cfg = config.InitConfig()
 
 	// this message only shows up if app is run with -debug option, so its great for debugging
 	logging.Debug.Println("nsq init called", cfg.Server.Name)
 
 	// contohnya: caranya ciptakan nsq consumer
 	nsqCfg := nsq.NewConfig()
-	q := createNewConsumer(nsqCfg, "random-topic", "test", handler)
+	q := createNewConsumer(nsqCfg, "TestTraining", "test", handler)
 	q.SetLogger(log.New(os.Stderr, "nsq:", log.Ltime), nsq.LogLevelError)
-	q.ConnectToNSQLookupd("nsqlookupd.local:4161")
+	q.ConnectToNSQLookupd(cfg.NSQ.Lookupd)
 
 	return &NSQModule{
-		cfg: &cfg,
+		cfg: cfg,
 		q:   q,
 	}
 
 }
 
 func handler(msg *nsq.Message) error {
-	log.Println("got message :", string(msg.Body))
+	redis.SetRedis(msg.Body)
+	//log.Println("got message :", string(msg.Body))
 	msg.Finish()
 	return nil
 }

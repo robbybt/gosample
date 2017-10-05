@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/tokopedia/gosample/src/deposit"
+	"github.com/tokopedia/gosample/src/order"
 
 	"github.com/google/gops/agent"
 
@@ -44,7 +45,8 @@ func main() {
 	debug("app started") // message will not appear unless run with -debug switch
 
 	var configs *config.Config
-	configs = InitConfig()
+
+	configs = config.InitConfig()
 
 	if err := agent.Listen(agent.Options{
 		ShutdownCleanup: true, // automatically closes on os.Interrupt
@@ -54,23 +56,11 @@ func main() {
 
 	hwm := hello.NewHelloWorldModule(configs)
 	dm := deposit.NewDepositModule(configs)
+	od := order.NewOrderModule(configs)
 	http.HandleFunc("/hello", hwm.SayHelloWorld)
 	http.HandleFunc("/tambah", hwm.SumNumber)
 	http.HandleFunc("/add", dm.AddDeposit)
-	go logging.StatsLog()
-
-	log.Fatal(grace.Serve(":9000", nil))
-	fmt.Println(printWord("test123"))
-}
-
-func InitConfig() *config.Config {
-	var cfg config.Config
-
-	ok := logging.ReadModuleConfig(&cfg, "config", "hello") || logging.ReadModuleConfig(&cfg, "files/etc/gosample", "hello")
-	if !ok {
-		// when the app is run with -e switch, this message will automatically be redirected to the log file specified
-		log.Fatalln("failed to read config")
-	}
-
-	return &cfg
+	http.HandleFunc("/tugas", od.GetOrder)
+	//go logging.StatsLog()
+	log.Fatal(grace.Serve(":8080", nil))
 }
